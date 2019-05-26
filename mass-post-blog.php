@@ -22,8 +22,8 @@ function add_menupage(){
 }
 
 function interface_function() {
-	$masspoblog = new MassPostBlog();
-	$masspoblog->get_interface(get_plugin_data(__FILE__)['Name']);
+	$masspostblog = new MassPostBlog();
+	$masspostblog->get_interface(get_plugin_data(__FILE__)['Name']);
 }
 add_action( 'admin_menu', 'add_menupage' );
 
@@ -38,11 +38,15 @@ add_filter( 'option_page_capability_'.'mass-post-blog', 'page_capability' );
 function mass_post_blog_callback() {
 	if(isset($_FILES["file"])){
 		$tmpName = $_FILES['file']['tmp_name'];
-		$csvAsArray = array_map('str_getcsv', file($tmpName));
-		echo var_dump($csvAsArray);
+		$csvarr = array_map('str_getcsv', file($tmpName));
+		$masspostblog = new MassPostBlog();
+		$response = $masspostblog->fill_blog($csvarr);
+		echo $response;
+	} else {
+		echo "Request Error";
 	}
-	// $tmpName = $_FILES['csv']['tmp_name'];
-	// $csvAsArray = array_map('str_getcsv', file($tmpName));
+	
+
 	wp_die(); // выход нужен для того, чтобы в ответе не было ничего лишнего, только то что возвращает функция
 }
 
