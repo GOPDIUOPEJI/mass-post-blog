@@ -33,5 +33,21 @@ function page_capability( $capability ) {
 }
 add_filter( 'option_page_capability_'.'mass-post-blog', 'page_capability' );
 
+/* ajax callback*/
+
+function mass_post_blog_callback() {
+	if(isset($_FILES["file"])){
+		$tmpName = $_FILES['file']['tmp_name'];
+		$csvAsArray = array_map('str_getcsv', file($tmpName));
+		echo var_dump($csvAsArray);
+	}
+	// $tmpName = $_FILES['csv']['tmp_name'];
+	// $csvAsArray = array_map('str_getcsv', file($tmpName));
+	wp_die(); // выход нужен для того, чтобы в ответе не было ничего лишнего, только то что возвращает функция
+}
+
+add_action( 'wp_ajax_mass_post_blog', 'mass_post_blog_callback' );
+
+
 
 
