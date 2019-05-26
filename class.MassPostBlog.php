@@ -6,20 +6,30 @@ class MassPostBlog {
 		include( plugin_dir_path( __FILE__ ) . 'views/interface.php');
 	}
 
+	/* Основной метод генеррирования постов для блога */
+
 	public function fill_blog($args) {
 		if($this->is_file_correct($args[0])){
-			foreach ($args as $key => $value) {
-				if ($k == 0){
-					return;
+			$posts = $this->structuring_table($args);
+			foreach ($posts as $post => $post_content) {
+				$post_data;
+				foreach ($post_content as $key => $value) {
+					//return var_dump($value);
+					foreach ($value as $k => $v) {
+						$post_data[$k] = $v;
+					}
 				}
-				create_post($args[$key]['post_name'], $args[$key]['post_content'], $args[$key]['post_categories'],
-				 $args[$i]['post_date']);
+				$this->create_post($post_data['post_name'], $post_data['post_content'], $post_data['post_categories'],
+			$post_data['post_date']) ;				
 			}
+			//return var_dump($post_data);
 			return true;
 		} else {
 			return "Wrong file structure!";
 		}
 	}
+
+	/* Данный метод проверяет наличие ключевых полей в таблице */
 
 	public function is_file_correct($arr) {
 		if(!in_array('post_name', $arr) || !in_array('post_content', $arr) || 
@@ -30,15 +40,36 @@ class MassPostBlog {
 		}
 	}
 
+	/* Данный метод создан для приведения соответствия данных постах согласно их заголовкам. */
+
+	public function structuring_table($arr){
+		$right_array = array();
+		$iterator = 0;
+		foreach ($arr as $post_key => $post) {
+			if ($post_key == 0){
+				continue ;
+			}
+			foreach ($post as $key => $value) {
+				$right_array[$iterator][$key] = [$arr[0][$key] => $value];
+				
+			}
+			$iterator ++;
+		}	
+		return $right_array;	
+	}
+
+	/* Метод создающий отдельный пост */
+
 	private function create_post($post_name, $post_content, $post_categories, $post_date){
 		$categories = $this->get_post_categories($post_categories);
 		$post_data = array(
 			'post_title'    => wp_strip_all_tags( $post_name ),
 			'post_content'  => $post_content,
 			'post_status'   => 'publish',
+			'post_type'		=> 'post',
 			'post_author'   => 1,
 			'post_category' => count($categories) > 3 ? array_slice($categories, 0, 3) : $categories,
-			'post_date'     => check_post_date($post_date),
+			'post_date'     => $this->check_post_date($post_date),
 		);
 
 		// Вставляем запись в базу данных
@@ -46,7 +77,9 @@ class MassPostBlog {
 		return $post_id;
 	}
 
+	/* Метод, который возвращает список категорий, которые были объявленны в админке и указаны в файле */
 	private function get_post_categories($a_categories) {
+		$a_categories = explode(",", $a_categories);
 		$categories = array();
 		foreach ($a_categories as $key => $value) {
 			if(get_category_by_slug($value)){
@@ -56,14 +89,16 @@ class MassPostBlog {
 		return $categories;
 	}
 
+	/* Метод, который возвращает дату создания поста(сли оно было указано верно) или же укажет текущую дату*/
+
 	private function check_post_date($date) {
-		$d = explode(',', $date)[0];
-		$m = explode(',', $date)[1];
-		$y = explode(',', $date)[2];
+		$d = explode('.', $date)[0];
+		$m = explode('.', $date)[1];
+		$y = explode('.', $date)[2];
 		if(wp_checkdate($m, $d, $y, $date)) {
-			return wp_checkdate($m, $d, $y, $date);
+			return $y . "-" . $m . "-" . $d;
 		} else {
-			return current_time();
+			return date('Y-m-d');
 		}
 	}
 
