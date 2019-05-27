@@ -9,23 +9,28 @@ class MassPostBlog {
 	/* Основной метод генеррирования постов для блога */
 
 	public function fill_blog($args) {
+		$response;
 		if($this->is_file_correct($args[0])){
 			$posts = $this->structuring_table($args);
 			foreach ($posts as $post => $post_content) {
 				$post_data;
 				foreach ($post_content as $key => $value) {
-					//return var_dump($value);
 					foreach ($value as $k => $v) {
 						$post_data[$k] = $v;
 					}
 				}
-				$this->create_post($post_data['post_name'], $post_data['post_content'], $post_data['post_categories'],
-			$post_data['post_date']) ;				
+				$response[$post] = $this->create_post($post_data['post_name'], $post_data['post_content'], $post_data['post_categories'], $post_data['post_date']);				
 			}
-			//return var_dump($post_data);
-			return true;
+			if(in_array(false, $response)){
+				$response['code'] = 203;
+				$response['bad_posts'] = implode(", ", array_keys($response, false));
+			} else {
+				$response['code'] = 200;
+			};
+			return $response;
+
 		} else {
-			return "Wrong file structure!";
+			return ['code' => 204];
 		}
 	}
 
@@ -51,7 +56,6 @@ class MassPostBlog {
 			}
 			foreach ($post as $key => $value) {
 				$right_array[$iterator][$key] = [$arr[0][$key] => $value];
-				
 			}
 			$iterator ++;
 		}	
@@ -61,14 +65,18 @@ class MassPostBlog {
 	/* Метод создающий отдельный пост */
 
 	private function create_post($post_name, $post_content, $post_categories, $post_date){
-		$categories = $this->get_post_categories($post_categories);
+		if(empty($post_name) || empty($post_content)){
+			return false;
+		}
+		$post_categories = $this->get_post_categories($post_categories);
+		$categories = count($post_categories) > 3 ? array_slice($post_categories, 0, 3) : $post_categories;
 		$post_data = array(
 			'post_title'    => wp_strip_all_tags( $post_name ),
 			'post_content'  => $post_content,
 			'post_status'   => 'publish',
 			'post_type'		=> 'post',
 			'post_author'   => 1,
-			'post_category' => count($categories) > 3 ? array_slice($categories, 0, 3) : $categories,
+			'post_category' => empty($categories) ? 'default_category' : $categories,
 			'post_date'     => $this->check_post_date($post_date),
 		);
 

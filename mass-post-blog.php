@@ -36,14 +36,14 @@ add_filter( 'option_page_capability_'.'mass-post-blog', 'page_capability' );
 /* ajax callback*/
 
 function mass_post_blog_callback() {
-	if(isset($_FILES["file"])){
+	if(isset($_FILES["file"]) && $_FILES["file"]["type"] == "text/csv"){
 		$tmpName = $_FILES['file']['tmp_name'];
 		$csvarr = array_map('str_getcsv', file($tmpName));
 		$masspostblog = new MassPostBlog();
 		$response = $masspostblog->fill_blog($csvarr);
-		echo $response;
+		echo json_encode($response);
 	} else {
-		echo "Request Error";
+		echo json_encode(array('code' => 205));
 	}
 	
 

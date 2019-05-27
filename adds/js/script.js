@@ -16,13 +16,26 @@ jQuery(function($){
 		  contentType: false,
     	  processData: false,
     	  success: function(response){
-    	  	console.log(response);
+    	  	response = jQuery.parseJSON(response);
+    	  	console.log(response.code);
+    	  	if(response.code == 205){
+    	  		$('#CsvPosts p.error').text("Error: Bad file type!");
+    	  	}
+    	  	if(response.code == 204){
+    	  		$('#CsvPosts p.error').text("Error: Wrong file structure (some of important headers are not exists)!");
+    	  	}
+    	  	if(response.code == 203){
+    	  		var bad_posts = response.bad_posts.split(", ");
+    	  		bad_posts = bad_posts.map(function(n){return Number(n) + 2;})
+    	  		var err_msg = "Error: posts in rows " + bad_posts.join(", ") + " was not added!";
+    	  		$('#CsvPosts p.error').text(err_msg);
+    	  	}
+    	  	if(response.code == 200){
+    	  		$('#CsvPosts p.error').text("All posts was created!");
+    	  	}
     	  },
 		});
 
-		// $.post( ajaxurl, form_data, function(response) {
-		// 	console.log(response);
-		// });
 		return false;
 	});
 	
